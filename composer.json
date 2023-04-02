@@ -6,14 +6,17 @@
     "license": "MIT",
     "require": {
         "php": "^8.0.2",
+        "ext-gd": "*",
+        "ext-mysqli": "*",
+        "ext-readline": "*",
+        "google/cloud-vision": "^1.6",
         "guzzlehttp/guzzle": "^7.2",
         "justbetter/laravel-magento-client": "^1.0",
         "laravel/framework": "^9.19",
         "laravel/sanctum": "^3.0",
         "laravel/tinker": "^2.7",
         "nutgram/nutgram": "^3.13",
-        "ext-mysqli": "*",
-        "ext-fann": "*"
+        "rubix/ml": "^2.3"
     },
     "require-dev": {
         "fakerphp/faker": "^1.9.1",

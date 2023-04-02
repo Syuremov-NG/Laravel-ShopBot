@@ -9,7 +9,7 @@ use SergiX44\Nutgram\Nutgram;
 use SergiX44\Nutgram\Telegram\Types\Keyboard\InlineKeyboardButton;
 use SergiX44\Nutgram\Telegram\Types\WebApp\WebAppInfo;
 
-class StartMenu extends InlineMenu
+class StartMenu extends AbstractMenu
 {
     const LOGIN = 'login';
     const HELP = 'help';
@@ -19,6 +19,12 @@ class StartMenu extends InlineMenu
 
     public int $id;
     public User $user;
+
+    public function __construct(
+        protected SearchMenu $searchMenu,
+        protected OrdersMenu $ordersMenu
+    ) {
+    }
 
     public function start(Nutgram $bot)
     {
@@ -30,14 +36,24 @@ class StartMenu extends InlineMenu
         }
         $this->menuText("Добро пожаловать в M2-Shop телеграм бота.\nНа данный момент Вам доступны следующие функции:")
             ->addButtonRow(InlineKeyboardButton::make('Техническая поддержка', callback_data: self::HELP . '@handleHelp'))
-            ->addButtonRow(InlineKeyboardButton::make('Поиск товаров', callback_data: self::SEARCH . '@handleSearch'))
+            ->addButtonRow(InlineKeyboardButton::make('Поиск товаров', callback_data: 'start_search_menu'))
             ->addButtonRow(InlineKeyboardButton::make('Новости', callback_data: self::NEWS . '@handleNews'))
             ->addButtonRow(InlineKeyboardButton::make('Акции', callback_data: self::PROMO . '@handlePromo'))
-            ->orNext('none')
-            ->showMenu();
+            ->orNext('none');
+        if (User::checkAuth($chatId)) {
+            $this->addButtonRow(InlineKeyboardButton::make('Мои заказы', callback_data: '@handleOrders'));
+        }
+        $this->showMenu();
     }
 
-    public function handleLogin(Nutgram $bot) {
+    public function handleOrders()
+    {
+        $this->clearButtons();
+        $this->searchMenu->start($bot);
+    }
+
+    public function handleLogin(Nutgram $bot)
+    {
         $this->user->last_message = $this->messageId;
         $this->user->save();
         $this->clearButtons();
@@ -49,19 +65,25 @@ class StartMenu extends InlineMenu
         $this->menuText("Для авторизации нажмите на кнопку ниже.")->showMenu();
     }
 
-    public function handleHelp(Nutgram $bot) {
+    public function handleHelp(Nutgram $bot)
+    {
+        $this->closeMenu();
+        $this->ordersMenu->start($bot);
+    }
+
+    public function handleSearch(Nutgram $bot)
+    {
+        $this->closeMenu();
+        $this->searchMenu->start($bot);
+    }
+
+    public function handleNews(Nutgram $bot)
+    {
         $this->clearButtons();
     }
 
-    public function handleSearch(Nutgram $bot) {
-        $this->clearButtons();
-    }
-
-    public function handleNews(Nutgram $bot) {
-        $this->clearButtons();
-    }
-
-    public function handlePromo(Nutgram $bot) {
+    public function handlePromo(Nutgram $bot)
+    {
         $this->clearButtons();
     }
 

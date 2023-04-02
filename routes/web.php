@@ -28,4 +28,20 @@ Route::get('/', function () {
 //Route::get('/login', [AuthController::class, 'authenticate']);
 
 Route::get('/login', [AuthController::class, 'login'])->name('login');
-Route::get('/test', [MageRepository::class, 'getProducts']);
+Route::get('/test', function (MageRepository $mageRepository) {
+    $product = $mageRepository->getProducts(3, 1, 1)->last();
+    // SKU, name, price, media_gallery_entries['file'], "attribute_code": "description"
+    echo $product->sku;
+    echo $product->name;
+    echo $product->price;
+    echo $product->media_gallery_entries[0]->file;
+//    print_r($product);
+    $arr = array_filter($product->custom_attributes, function ($item) {
+            return $item->attribute_code == 'description';
+        });
+
+    $obj = reset($arr)->value;
+    print_r($obj);
+});
+
+

@@ -2,10 +2,12 @@
 
 namespace App\Magento\Config;
 
+use App\Models\AdminToken;
 use App\Models\User;
 use Carbon\Carbon;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
+use Illuminate\Support\Facades\Log;
 
 class MageConfig
 {
@@ -16,16 +18,31 @@ class MageConfig
     /**
      * @throws GuzzleException
      */
-    public function getAdminAuthToken()
+    public static function getAdminAuthToken()
     {
+        $items = AdminToken::all();
+        $token = $items->count() != 0 ? $items->last() : null;
+        $currentDate = Carbon::now();
+
+        if (
+            $token?->token
+            && $currentDate->diffInSeconds(Carbon::parse($token->created_at)) < config('global.token_lifetime')
+        ) {
+            Log::debug('actual');
+            return $token->token;
+        }
+        Log::debug('new');
+        $token = new AdminToken();
         $endpoint = "http://shop.local/rest/all/V1/integration/admin/token";
         $client = new Client();
         $res = $client->request('post', $endpoint, ['json' => [
-            'username' => 'admin', 'password' => 'admin0000'
+            'username' => env('MAGENTO_ADMIN_LOGIN'), 'password' => env('MAGENTO_ADMIN_PASS')
         ]]);
         $content = $res->getBody();
-        $this->update_env(['MAGENTO_ACCESS_TOKEN' => $content]);
-        return $content;
+        $token->token = trim($content, '"');
+        $token->save();
+
+        return $token->token;
     }
 
     /**
@@ -40,7 +57,7 @@ class MageConfig
         ]]);
         $content = $res->getBody()->getContents();
         User::where(User::TELEGRAM_ID, $chatId)->update([
-            User::TOKEN => $content,
+            User::TOKEN => trim($content, '"'),
             User::TOKEN_UPDATED => Carbon::now()->toDateTimeString()
         ]);
         return $content;
