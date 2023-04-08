@@ -40,6 +40,7 @@ class AuthController extends Controller
         $messageId = $formData['message'];
         try {
             $this->mageConfig->getCustomerAuthToken($email, $password, $chatId);
+            $this->mageConfig->sendChatId($email, $chatId);
             $errorMessage = User::where(User::TELEGRAM_ID, $chatId)->first()->last_message;
 
             try {
@@ -81,6 +82,7 @@ class AuthController extends Controller
                 ]);
                 return response('Not auth', $exception->getCode());
             }
+            Log::error($exception->getMessage());
             $message = 'Oops, something went wrong.';
             $this->bot->sendMessage($message, ['chat_id' => $chatId]);
             return response([$message], 500);

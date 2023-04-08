@@ -18,9 +18,9 @@ $logger->info('Loading data into memory');
 
 $samples = $labels = [];
 
-foreach (glob('valid/*.jpg') as $file) {
-    $samples[] = [imagecreatefromjpeg($file)];
-    $labels[] = preg_replace('/[0-9]+_(.*).jpg/', '$1', basename($file));
+foreach (glob('valid/*.png') as $file) {
+    $samples[] = [imagecreatefrompng($file)];
+    $labels[] = explode(' ', basename($file))[0];
 }
 
 $dataset = new Labeled($samples, $labels);

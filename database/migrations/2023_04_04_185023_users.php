@@ -15,11 +15,14 @@ return new class extends Migration
     {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
-            $table->string('email')->unique()->nullable(true);
-            $table->string('name');
+            $table->string('email')->unique()->nullable();
+            $table->string('name')->nullable();
             $table->string('telegram_id')->unique();
-            $table->string('token')->nullable(true);
-            $table->timestamp('token_updated')->nullable(true);
+            $table->string('token')->nullable();
+            $table->string('last_message')->nullable();
+            $table->boolean('authorized')->default(0)->nullable();
+            $table->boolean('notify')->default(0);
+            $table->timestamp('token_updated')->nullable();
             $table->timestamps();
         });
     }

@@ -29,7 +29,7 @@ Route::get('/', function () {
 
 Route::get('/login', [AuthController::class, 'login'])->name('login');
 Route::get('/test', function (MageRepository $mageRepository) {
-    $product = $mageRepository->getProducts(3, 1, 1)->last();
+    $product = $mageRepository->getOrders(748989724);
     // SKU, name, price, media_gallery_entries['file'], "attribute_code": "description"
     echo $product->sku;
     echo $product->name;

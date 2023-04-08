@@ -27,10 +27,10 @@ $logger->info('Loading data into memory');
 
 $samples = $labels = [];
 
-foreach (glob('train/*.jpg') as $file) {
-    $samples[] = [imagecreatefromjpeg($file)];
+foreach (glob('train/*.png') as $file) {
+    $samples[] = [imagecreatefrompng($file)];
     $test =  basename($file);
-    $labels[] = preg_replace('/^(\w+)/', '$1', basename($file));
+    $labels[] = explode(' ', basename($file))[0];
 }
 
 $dataset = new Labeled($samples, $labels);

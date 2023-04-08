@@ -41,15 +41,15 @@ class StartMenu extends AbstractMenu
             ->addButtonRow(InlineKeyboardButton::make('Акции', callback_data: self::PROMO . '@handlePromo'))
             ->orNext('none');
         if (User::checkAuth($chatId)) {
-            $this->addButtonRow(InlineKeyboardButton::make('Мои заказы', callback_data: '@handleOrders'));
+            $this->addButtonRow(InlineKeyboardButton::make('Мои заказы', callback_data: 'start_orders_menu'));
         }
         $this->showMenu();
     }
 
-    public function handleOrders()
+    public function handleOrders(Nutgram $bot)
     {
         $this->clearButtons();
-        $this->searchMenu->start($bot);
+        $this->ordersMenu->start($bot);
     }
 
     public function handleLogin(Nutgram $bot)

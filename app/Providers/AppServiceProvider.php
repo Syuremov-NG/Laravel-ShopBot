@@ -35,7 +35,7 @@ class AppServiceProvider extends ServiceProvider
         });
 
         $this->app->bind(OrdersMenu::class, function ($app) {
-            return new OrdersMenu();
+            return new OrdersMenu($app->make(MageRepository::class));
         });
 
         $this->app->bind(StartMenu::class, function ($app) {

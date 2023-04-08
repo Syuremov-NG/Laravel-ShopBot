@@ -33,7 +33,7 @@ class MageConfig
         }
         Log::debug('new');
         $token = new AdminToken();
-        $endpoint = "http://shop.local/rest/all/V1/integration/admin/token";
+        $endpoint = config('global.magento_url') . "/rest/all/V1/integration/admin/token";
         $client = new Client();
         $res = $client->request('post', $endpoint, ['json' => [
             'username' => env('MAGENTO_ADMIN_LOGIN'), 'password' => env('MAGENTO_ADMIN_PASS')
@@ -50,7 +50,7 @@ class MageConfig
      */
     public function getCustomerAuthToken(string $email, string $password, string $chatId)
     {
-        $endpoint = "http://shop.local/rest/all/V1/integration/customer/token";
+        $endpoint = config('global.magento_url') . "/rest/all/V1/integration/customer/token";
         $client = new Client();
         $res = $client->request('post', $endpoint, ['json' => [
             'username' => $email, 'password' => $password
@@ -63,7 +63,19 @@ class MageConfig
         return $content;
     }
 
-    private function update_env( $data = [] ) : void
+    /**
+     * @throws GuzzleException
+     */
+    public function sendChatId(mixed $email, mixed $chatId)
+    {
+        $endpoint = config('global.magento_url') . "/rest/all/V1/chatbot/setChatId/";
+        $client = new Client();
+        $client->request('post', $endpoint, ['json' => [
+            'email' => $email, 'chatId' => $chatId
+        ]]);
+    }
+
+    private function update_env($data = []) : void
     {
         $path = base_path('.env');
 
@@ -74,6 +86,5 @@ class MageConfig
                 ));
             }
         }
-
     }
 }

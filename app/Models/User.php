@@ -15,6 +15,7 @@ class User extends Model
     const TOKEN = 'token';
     const TOKEN_UPDATED = 'token_updated';
     const LAST_MESSAGE = 'last_message';
+    const NOTIFY = 'notify';
 
     protected $fillable = [self::NAME, self::TELEGRAM_ID];
 

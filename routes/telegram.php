@@ -1,6 +1,7 @@
 <?php
 /** @var SergiX44\Nutgram\Nutgram $bot */
 
+use App\Bot\Menus\OrdersMenu;
 use App\Bot\Menus\ProductMenu;
 use App\Bot\Menus\SearchMenu;
 use App\Bot\Menus\StartMenu;
@@ -33,6 +34,8 @@ $bot->onCallbackQueryData('auth_success|auth_failed|start', function (Nutgram $b
 });
 
 $bot->onCallbackQueryData('start_search_menu', SearchMenu::class);
+
+$bot->onCallbackQueryData('start_orders_menu', OrdersMenu::class);
 
 $bot->onCallbackQueryData('categories', function (Nutgram $bot) {
     SearchMenu::trigger($bot, 'handleManual');

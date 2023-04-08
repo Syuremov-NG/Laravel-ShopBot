@@ -1,0 +1,54 @@
+[
+    {
+        "overall": {
+            "accuracy": 1,
+            "balanced accuracy": 0.5,
+            "f1 score": 1,
+            "precision": 1,
+            "recall": 1,
+            "specificity": 0,
+            "negative predictive value": 0,
+            "false discovery rate": 0,
+            "miss rate": 0,
+            "fall out": 1,
+            "false omission rate": 1,
+            "mcc": 0,
+            "informedness": 0,
+            "markedness": 0,
+            "true positives": 1,
+            "true negatives": 0,
+            "false positives": 0,
+            "false negatives": 0,
+            "cardinality": 1
+        },
+        "classes": {
+            "white_sneakers": {
+                "accuracy": 1,
+                "balanced accuracy": 0.5,
+                "f1 score": 1,
+                "precision": 1,
+                "recall": 1,
+                "specificity": 0,
+                "negative predictive value": 0,
+                "false discovery rate": 0,
+                "miss rate": 0,
+                "fall out": 1,
+                "false omission rate": 1,
+                "informedness": 0,
+                "markedness": 0,
+                "mcc": 0,
+                "true positives": 1,
+                "true negatives": 0,
+                "false positives": 0,
+                "false negatives": 0,
+                "cardinality": 1,
+                "proportion": 1
+            }
+        }
+    },
+    {
+        "white_sneakers": {
+            "white_sneakers": 1
+        }
+    }
+]
