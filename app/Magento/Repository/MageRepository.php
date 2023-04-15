@@ -109,6 +109,25 @@ class MageRepository
         }
     }
 
+    public function getProductsByType(string $value, int $limit, int $page)
+    {
+        Log::debug('value: ' . $value);
+        $endpoint = config('global.magento_url') . "/rest/all/V1/products"
+            . "?searchCriteria[filterGroups][0][filters][0][field]=neuro_label"
+            . "&searchCriteria[filterGroups][0][filters][0][value]=$value"
+            . "&searchCriteria[pageSize]=$limit"
+            . "&searchCriteria[currentPage]=$page";
+
+        $client = new Client();
+        try {
+            $token = MageConfig::getAdminAuthToken();
+            $arr = $this->getItems($token, $endpoint, $client);
+            return Product::hydrate($arr);
+        } catch (GuzzleException $e) {
+            return MageConfig::getAdminAuthToken();
+        }
+    }
+
     public function getCustomerId(string $chatId)
     {
         $endpoint = config('global.magento_url') . "/rest/V1/customers/me";

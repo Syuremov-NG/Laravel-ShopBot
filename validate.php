@@ -18,8 +18,8 @@ $logger->info('Loading data into memory');
 
 $samples = $labels = [];
 
-foreach (glob('valid/*.png') as $file) {
-    $samples[] = [imagecreatefrompng($file)];
+foreach (glob('valid/*.jpg') as $file) {
+    $samples[] = [imagecreatefromjpeg($file)];
     $labels[] = explode(' ', basename($file))[0];
 }
 

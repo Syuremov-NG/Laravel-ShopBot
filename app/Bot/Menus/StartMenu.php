@@ -3,6 +3,7 @@
 namespace App\Bot\Menus;
 
 use App\Models\User;
+use InvalidArgumentException;
 use SergiX44\Nutgram\Conversations\Conversation;
 use SergiX44\Nutgram\Conversations\InlineMenu;
 use SergiX44\Nutgram\Nutgram;
@@ -31,13 +32,16 @@ class StartMenu extends AbstractMenu
         $this->clearButtons();
         $chatId = $bot->chatId() ?? $this->chatId;
         $this->user = User::firstOrCreate([User::TELEGRAM_ID => $chatId]);
+        try {
+            $bot->deleteGlobalData($bot->chatId());
+        } catch (\Psr\SimpleCache\InvalidArgumentException $e) {
+        }
         if (!User::checkAuth($chatId)) {
             $this->addButtonRow(InlineKeyboardButton::make('Авторизация', callback_data: self::LOGIN . '@handleLogin'));
         }
         $this->menuText("Добро пожаловать в M2-Shop телеграм бота.\nНа данный момент Вам доступны следующие функции:")
             ->addButtonRow(InlineKeyboardButton::make('Техническая поддержка', callback_data: self::HELP . '@handleHelp'))
             ->addButtonRow(InlineKeyboardButton::make('Поиск товаров', callback_data: 'start_search_menu'))
-            ->addButtonRow(InlineKeyboardButton::make('Новости', callback_data: self::NEWS . '@handleNews'))
             ->addButtonRow(InlineKeyboardButton::make('Акции', callback_data: self::PROMO . '@handlePromo'))
             ->orNext('none');
         if (User::checkAuth($chatId)) {
@@ -77,11 +81,6 @@ class StartMenu extends AbstractMenu
         $this->searchMenu->start($bot);
     }
 
-    public function handleNews(Nutgram $bot)
-    {
-        $this->clearButtons();
-    }
-
     public function handlePromo(Nutgram $bot)
     {
         $this->clearButtons();
@@ -89,9 +88,7 @@ class StartMenu extends AbstractMenu
 
     public function none(Nutgram $bot)
     {
-        $this->closeMenu('Bye!');
         $this->end();
-        // TODO: Сделать выход из меню в виде логаута. При следующем входе в меню, пользователю надо опять регаться.
     }
 }
 

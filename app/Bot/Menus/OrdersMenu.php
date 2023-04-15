@@ -56,4 +56,9 @@ class OrdersMenu extends InlineMenu
         $user->save();
         $this->start($bot);
     }
+
+    public function none(Nutgram $bot)
+    {
+        $this->end();
+    }
 }

@@ -3,11 +3,11 @@
 use App\Http\Controllers\AuthController;
 use App\Models\User;
 use App\Magento\Repository\MageRepository;
-use App\Models\User2;
+use GuzzleHttp\Client;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
-
-use Illuminate\Http\Request;
+use Illuminate\Http\Client\Request;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Auth;
 use SergiX44\Nutgram\Nutgram;
 
@@ -28,20 +28,29 @@ Route::get('/', function () {
 //Route::get('/login', [AuthController::class, 'authenticate']);
 
 Route::get('/login', [AuthController::class, 'login'])->name('login');
-Route::get('/test', function (MageRepository $mageRepository) {
-    $product = $mageRepository->getOrders(748989724);
-    // SKU, name, price, media_gallery_entries['file'], "attribute_code": "description"
-    echo $product->sku;
-    echo $product->name;
-    echo $product->price;
-    echo $product->media_gallery_entries[0]->file;
-//    print_r($product);
-    $arr = array_filter($product->custom_attributes, function ($item) {
-            return $item->attribute_code == 'description';
-        });
+Route::get('/test', function () {
+//    $response = Http::withHeaders([
+//        'Content-Type' => 'multipart/form-data'
+//    ])->attach('imageData', file_get_contents("/home/nsyuremov/Study/Diplom/ShopBot/valid/backpack puma_phase_backpack (2).png"), 'image.jpg')
+//        ->post('http://shop.local/rest/all/V1/chatbot/validImage/');
+//    if ($response->successful()) {
+//        echo 'test';
+//    } else {
+//        echo $response->getBody();
+//    }
+    $client = new Client();
 
-    $obj = reset($arr)->value;
-    print_r($obj);
+    $response = $client->request('POST', 'http://shop.local/rest/all/V1/chatbot/validImage', [
+        'multipart' => [
+            [
+                'name' => 'image',
+                'contents' => fopen('/home/nsyuremov/Study/Diplom/ShopBot/valid/backpack puma_phase_backpack (2).png', 'r'),
+                'filename' => 'image.png'
+            ]
+        ]
+    ]);
+
+    echo $response->getBody();
 });
 
 

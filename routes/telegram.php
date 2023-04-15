@@ -8,6 +8,7 @@ use App\Bot\Menus\StartMenu;
 use App\Bot\Middlewares\AuthMiddleware;
 use App\Magento\Repository\MageRepository;
 use App\Models\User;
+use Psr\SimpleCache\InvalidArgumentException;
 use SergiX44\Nutgram\Nutgram;
 use SergiX44\Nutgram\Telegram\Types\Keyboard\ReplyKeyboardRemove;
 
@@ -38,11 +39,15 @@ $bot->onCallbackQueryData('start_search_menu', SearchMenu::class);
 $bot->onCallbackQueryData('start_orders_menu', OrdersMenu::class);
 
 $bot->onCallbackQueryData('categories', function (Nutgram $bot) {
+    try {
+        $bot->deleteGlobalData($bot->chatId());
+    } catch (InvalidArgumentException $e) {
+    }
     SearchMenu::trigger($bot, 'handleManual');
 });
 
 $bot->onCallbackQueryData('show_products {param}', function (Nutgram $bot, $param) {
-    $bot->setData('category_id', $param);
+    $bot->setData('category', $param);
     ProductMenu::begin($bot);
 });
 
@@ -54,5 +59,5 @@ $bot->onCallbackQueryData('keyword {param}', function (Nutgram $bot, $param) {
 
 //Test
 $bot->onCommand('test', function (Nutgram $bot) {
-    \App\Bot\Menus\Test::begin($bot);
+
 });

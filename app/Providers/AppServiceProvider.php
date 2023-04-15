@@ -9,6 +9,7 @@ use App\Bot\Menus\StartMenu;
 use App\Http\Controllers\AuthController;
 use App\Magento\Config\MageConfig;
 use App\Magento\Repository\MageRepository;
+use App\Neuro\ValidImage;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\ServiceProvider;
 use SergiX44\Nutgram\Nutgram;
@@ -46,11 +47,18 @@ class AppServiceProvider extends ServiceProvider
         });
 
         $this->app->bind(SearchMenu::class, function ($app) {
-            return new SearchMenu($app->make(MageRepository::class));
+            return new SearchMenu(
+                $app->make(MageRepository::class),
+                $app->make(ValidImage::class)
+            );
         });
 
         $this->app->bind(ProductMenu::class, function ($app) {
             return new ProductMenu($app->make(MageRepository::class));
+        });
+
+        $this->app->bind(ValidImage::class, function ($app) {
+            return new ValidImage();
         });
     }
 
