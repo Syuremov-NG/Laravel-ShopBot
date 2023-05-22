@@ -3,6 +3,8 @@
 namespace App\Neuro;
 
 use Illuminate\Log\Logger;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Storage;
 use Psr\Log\LoggerInterface;
 use Rubix\ML\Loggers\Screen;
 use Rubix\ML\Datasets\Labeled;
@@ -23,10 +25,9 @@ class ValidImage
 
         $logger->info('Loading data into memory');
 
-        $samples = [[imagecreatefromjpeg(public_path("valid/$fileName.jpg"))]];
+        $path = public_path("valid/$fileName.jpg");
+        $samples = [[imagecreatefromjpeg($path)]];
         $labels = [$fileName];
-
-        Log::debug(count($samples) . " " . count($labels));
 
         $dataset = new Labeled($samples, $labels);
 
@@ -35,6 +36,8 @@ class ValidImage
         $logger->info('Making predictions');
 
         $predictions = $estimator->proba($dataset);
+
+        File::delete('public/' . "valid/$fileName.jpg");
 
         arsort($predictions[0]); // сортирует массив в порядке убывания по значениям
 

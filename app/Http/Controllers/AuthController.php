@@ -88,9 +88,4 @@ class AuthController extends Controller
             return response([$message], 500);
         }
     }
-
-    private function getMessage(string $text, string $chatId, string $buttonText, string $cllbackData)
-    {
-
-    }
 }

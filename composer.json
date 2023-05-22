@@ -7,8 +7,10 @@
     "require": {
         "php": "^8.0.2",
         "ext-gd": "*",
+        "ext-mbstring": "*",
         "ext-mysqli": "*",
         "ext-readline": "*",
+        "danog/madelineproto": "7.0.130",
         "google/cloud-vision": "^1.6",
         "guzzlehttp/guzzle": "^7.2",
         "justbetter/laravel-magento-client": "^1.0",

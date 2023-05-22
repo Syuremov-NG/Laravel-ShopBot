@@ -3,14 +3,13 @@
 namespace App\Providers;
 
 use App\Bot\Menus\OrdersMenu;
-use App\Bot\Menus\ProductMenu;
+use App\Bot\Menus\Product\CategoryProductMenu;
 use App\Bot\Menus\SearchMenu;
 use App\Bot\Menus\StartMenu;
 use App\Http\Controllers\AuthController;
 use App\Magento\Config\MageConfig;
 use App\Magento\Repository\MageRepository;
 use App\Neuro\ValidImage;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\ServiceProvider;
 use SergiX44\Nutgram\Nutgram;
 
@@ -39,13 +38,6 @@ class AppServiceProvider extends ServiceProvider
             return new OrdersMenu($app->make(MageRepository::class));
         });
 
-        $this->app->bind(StartMenu::class, function ($app) {
-            return new StartMenu(
-                $app->make(SearchMenu::class),
-                $app->make(OrdersMenu::class)
-            );
-        });
-
         $this->app->bind(SearchMenu::class, function ($app) {
             return new SearchMenu(
                 $app->make(MageRepository::class),
@@ -53,8 +45,8 @@ class AppServiceProvider extends ServiceProvider
             );
         });
 
-        $this->app->bind(ProductMenu::class, function ($app) {
-            return new ProductMenu($app->make(MageRepository::class));
+        $this->app->bind(CategoryProductMenu::class, function ($app) {
+            return new CategoryProductMenu($app->make(MageRepository::class));
         });
 
         $this->app->bind(ValidImage::class, function ($app) {

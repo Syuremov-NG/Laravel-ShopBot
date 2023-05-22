@@ -6,12 +6,14 @@ use App\Magento\Config\MageConfig;
 use App\Models\Category;
 use App\Models\Order;
 use App\Models\Product;
+use App\Models\Sale;
 use App\Models\User;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Psr7\Request;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Log;
+use stdClass;
 
 class MageRepository
 {
@@ -34,13 +36,32 @@ class MageRepository
             $res = $client->send($request);
             $content = $res->getBody()->getContents();
             $arr = (array)json_decode($content)->items;
-            $collection = Category::hydrate($arr);
-            foreach ($collection as $item) {
-                Log::debug($item->name);
-            }
-            return $collection;
+            return Category::hydrate($arr);
         } catch (GuzzleException $e) {
             Log::error($e);
+            return MageConfig::getAdminAuthToken();
+        }
+    }
+
+    public function getCategoriesByIds(array $ids)
+    {
+        $endpoint = config('global.magento_url') . "/rest/all/V1/categories/list"
+            . "?searchCriteria[filterGroups][0][filters][0][field]=entity_id"
+            . "&searchCriteria[filterGroups][0][filters][0][value]=" . implode(',', $ids)
+            . "&searchCriteria[filterGroups][0][filters][0][conditionType]=in";
+
+        $client = new Client();
+        try {
+            $token = MageConfig::getAdminAuthToken();
+            $headers = [
+                'Authorization' => "Bearer " . trim($token, '"')
+            ];
+            $request = new Request('GET', $endpoint, $headers);
+            $res = $client->send($request);
+            $content = $res->getBody()->getContents();
+            $arr = (array)json_decode($content)->items;
+            return Category::hydrate($arr);
+        } catch (GuzzleException $e) {
             return MageConfig::getAdminAuthToken();
         }
     }
@@ -90,6 +111,20 @@ class MageRepository
         }
     }
 
+    public function getBestsellerProducts(int $page): Collection
+    {
+        $endpoint = config('global.magento_url') . "/rest/all/V1/chatbot/getBestsellers/?curPage=$page";
+
+        $client = new Client();
+        try {
+            $token = MageConfig::getAdminAuthToken();
+            $arr = $this->getItems($token, $endpoint, $client);
+            return Product::hydrate($arr);
+        } catch (GuzzleException $e) {
+            return MageConfig::getAdminAuthToken();
+        }
+    }
+
     public function getProductsLike(string $field, string $value, int $limit, int $page): Collection
     {
         $endpoint = config('global.magento_url') . "/rest/all/V1/products"
@@ -107,6 +142,30 @@ class MageRepository
         } catch (GuzzleException $e) {
             return MageConfig::getAdminAuthToken();
         }
+    }
+
+    public function getProductBySku(string $sku): ?stdClass
+    {
+        $endpoint = config('global.magento_url') . "/rest/all/V1/products/$sku";
+
+        $client = new Client();
+        try {
+            $token = MageConfig::getAdminAuthToken();
+            $headers = [
+                'Authorization' => 'Bearer ' . trim($token, '"')
+            ];
+            $request = new Request('GET', $endpoint, $headers);
+            $res = $client->send($request);
+            return json_decode($res->getBody()->getContents());
+        } catch (GuzzleException $e) {
+            Log::error("Error on SKU: " . $sku);
+            Log::error($e);
+            MageConfig::getAdminAuthToken();
+            if ($e->getCode() == 401) {
+                return $this->getProductBySku($sku);
+            }
+        }
+        return null;
     }
 
     public function getProductsByType(string $value, int $limit, int $page)
@@ -161,6 +220,81 @@ class MageRepository
                 . "&searchCriteria[filterGroups][0][filters][0][value]=$id";
             $arr = $this->getItems($token, $endpoint, $client);
             return Order::hydrate($arr);
+        } catch (GuzzleException $exception) {
+            return false;
+        }
+    }
+
+    public function getCategorySales()
+    {
+        $client = new Client();
+        try {
+            $token = MageConfig::getAdminAuthToken();
+            $endpoint = config('global.magento_url') . "/rest/V1/salesrules/getCategorySales/";
+            $headers = [
+                'Authorization' => 'Bearer ' . trim($token, '"')
+            ];
+            $request = new Request('GET', $endpoint, $headers);
+            $res = $client->send($request);
+            $content = $res->getBody()->getContents();
+            $arr = (array)json_decode($content)[0]->items;
+            return Sale::hydrate($arr);
+        } catch (GuzzleException $exception) {
+            return false;
+        }
+    }
+
+    public function getProductSales()
+    {
+        $client = new Client();
+        try {
+            $token = MageConfig::getAdminAuthToken();
+            $endpoint = config('global.magento_url') . "/rest/V1/salesrules/getProductSales/";
+            $headers = [
+                'Authorization' => 'Bearer ' . trim($token, '"')
+            ];
+            $request = new Request('GET', $endpoint, $headers);
+            $res = $client->send($request);
+            $content = $res->getBody()->getContents();
+            $arr = (array)json_decode($content)[0]->items;
+            return Sale::hydrate($arr);
+        } catch (GuzzleException $exception) {
+            return false;
+        }
+    }
+
+    public function getOtherSales()
+    {
+        $client = new Client();
+        try {
+            $token = MageConfig::getAdminAuthToken();
+            $endpoint = config('global.magento_url') . "/rest/V1/salesrules/getOtherSales/";
+            $headers = [
+                'Authorization' => 'Bearer ' . trim($token, '"')
+            ];
+            $request = new Request('GET', $endpoint, $headers);
+            $res = $client->send($request);
+            $content = $res->getBody()->getContents();
+            $arr = (array)json_decode($content)[0]->items;
+            return Sale::hydrate($arr);
+        } catch (GuzzleException $exception) {
+            return false;
+        }
+    }
+
+    public function getSaleInfo(string $id)
+    {
+        $client = new Client();
+        try {
+            $token = MageConfig::getAdminAuthToken();
+            $endpoint = config('global.magento_url') . "/rest/V1/salesRules/$id";
+            $headers = [
+                'Authorization' => 'Bearer ' . trim($token, '"')
+            ];
+            $request = new Request('GET', $endpoint, $headers);
+            $res = $client->send($request);
+            $content = json_decode($res->getBody()->getContents());
+            return $content;
         } catch (GuzzleException $exception) {
             return false;
         }

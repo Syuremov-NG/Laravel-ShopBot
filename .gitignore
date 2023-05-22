@@ -3,6 +3,7 @@
 /public/hot
 /public/storage
 /public/img
+/public/cifar10*
 /storage/*.key
 /vendor
 .env

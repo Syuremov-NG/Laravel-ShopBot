@@ -1,19 +1,19 @@
 <?php
 /** @var SergiX44\Nutgram\Nutgram $bot */
 
-use App\Bot\Menus\OrdersMenu;
-use App\Bot\Menus\ProductMenu;
+use App\Bot\CallbackHandler\OrderMenuHandler;
+use App\Bot\CallbackHandler\ProductMenu\BestsellerProductMenuHandler;
+use App\Bot\CallbackHandler\ProductMenu\CategoryProductMenuHandler;
+use App\Bot\CallbackHandler\ProductMenu\KeywordProductMenuHandler;
+use App\Bot\CallbackHandler\ProductMenu\NeuroProductMenuHandler;
+use App\Bot\CallbackHandler\SalesMenuHandler;
+use App\Bot\CallbackHandler\SearchMenuHandler;
+use App\Bot\CallbackHandler\StartMenuHandler;
+use App\Bot\Menus\Product\BestsellerProductMenu;
 use App\Bot\Menus\SearchMenu;
-use App\Bot\Menus\StartMenu;
-use App\Bot\Middlewares\AuthMiddleware;
-use App\Magento\Repository\MageRepository;
-use App\Models\User;
-use Psr\SimpleCache\InvalidArgumentException;
+use danog\MadelineProto\API;
 use SergiX44\Nutgram\Nutgram;
 use SergiX44\Nutgram\Telegram\Types\Keyboard\ReplyKeyboardRemove;
-
-// Authentication
-//$bot->middleware(AuthMiddleware::class);
 
 //Remove Keyboard
 $bot->onCommand('cancel', function (Nutgram $bot) {
@@ -23,41 +23,33 @@ $bot->onCommand('cancel', function (Nutgram $bot) {
 })->description('Remove keyboard buttons.');
 
 // Menus
-$bot->onCommand('start', StartMenu::class)->description('Start');
+$bot->onCommand('start', [StartMenuHandler::class, 'execute'])->description('Start');
 
-$bot->onCallbackQueryData('auth_success|auth_failed|start', function (Nutgram $bot) {
-    $messageId = User::where(User::TELEGRAM_ID, $bot->chatId())->first()?->last_message;
-    try {
-        $bot->deleteMessage($bot->chatId(), $messageId);
-    } catch (Exception $ignore) {
-    }
-    StartMenu::begin($bot);
-});
+$bot->onCallbackQueryData('auth_success|auth_failed|start', [StartMenuHandler::class, 'execute']);
 
-$bot->onCallbackQueryData('start_search_menu', SearchMenu::class);
+$bot->onCallbackQueryData('start_search_menu', [SearchMenuHandler::class, 'execute']);
 
-$bot->onCallbackQueryData('start_orders_menu', OrdersMenu::class);
+$bot->onCallbackQueryData('start_orders_menu', [OrderMenuHandler::class, 'execute']);
 
-$bot->onCallbackQueryData('categories', function (Nutgram $bot) {
-    try {
-        $bot->deleteGlobalData($bot->chatId());
-    } catch (InvalidArgumentException $e) {
-    }
-    SearchMenu::trigger($bot, 'handleManual');
-});
+$bot->onCallbackQueryData('start_sales_menu', [SalesMenuHandler::class, 'execute']);
 
-$bot->onCallbackQueryData('show_products {param}', function (Nutgram $bot, $param) {
-    $bot->setData('category', $param);
-    ProductMenu::begin($bot);
-});
+$bot->onCallbackQueryData('categories', [SearchMenuHandler::class, 'executeCategories']);
 
-$bot->onCallbackQueryData('keyword {param}', function (Nutgram $bot, $param) {
-    $bot->setData('keyword', $param);
-    ProductMenu::begin($bot);
-});
+$bot->onCallbackQueryData('show_category_products {key}-{value},{return}', [CategoryProductMenuHandler::class, 'execute']);
+
+$bot->onCallbackQueryData('show_neuro_products {key},{value},{return}', [NeuroProductMenuHandler::class, 'execute']);
+
+$bot->onCallbackQueryData('show_keyword_products {key},{value},{return}', [KeywordProductMenuHandler::class, 'execute']);
+
+$bot->onCallbackQueryData('start_bestseller_products', [BestsellerProductMenuHandler::class, 'execute']);
 // Menus
+
+$bot->onCallbackQueryData('subscribe-{categoryId},{name},{userId}', [SearchMenu::class, 'subscribe']);
+
+$bot->onCallbackQueryData('unsubscribe-{categoryId},{name},{userId}', [SearchMenu::class, 'unsubscribe']);
+
 
 //Test
 $bot->onCommand('test', function (Nutgram $bot) {
-
+   $bot->sendMessage('t');
 });

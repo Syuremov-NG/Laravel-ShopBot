@@ -49,9 +49,6 @@
 <script>
     const url = new URL(window.location.href);
     let $loading = $('.loader').hide();
-    $(document).ready(() => {
-        $(".login").text(url.searchParams.get('id'));
-    })
     $(document)
         .ajaxStart(function () {
             $loading.show();

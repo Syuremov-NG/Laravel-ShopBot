@@ -19,7 +19,8 @@ class User extends Model
 
     protected $fillable = [self::NAME, self::TELEGRAM_ID];
 
-    public static function checkAuth(string $chatId) {
+    public static function checkAuth(string $chatId)
+    {
         $user = self::where(User::TELEGRAM_ID, $chatId)->first();
         $currentDate = Carbon::now();
         if ($user

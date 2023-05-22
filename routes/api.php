@@ -3,6 +3,7 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\NotifyController;
 use App\Magento\Config\MageConfig;
+use danog\MadelineProto\API;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use SergiX44\Nutgram\Nutgram;
@@ -26,4 +27,5 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 // php artisan nutgram:hook:set ***/api/webhook
 Route::post('/webhook', [\App\Http\Controllers\FrontController::class, 'handle']);
 Route::post('/login', [AuthController::class, 'authenticate']);
-Route::post('/notifyOrder', NotifyController::class);
+Route::post('/notifyOrder', [NotifyController::class, 'notifyOrder']);
+Route::post('/notifyPromo', [NotifyController::class, 'notifyPromo']);

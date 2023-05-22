@@ -1,9 +1,14 @@
 <?php
 
+use App\Bot\Menus\Product\SalesProductMenu;
 use App\Http\Controllers\AuthController;
+use App\Magento\Config\MageConfig;
+use App\Models\Order;
 use App\Models\User;
 use App\Magento\Repository\MageRepository;
+use danog\MadelineProto\API;
 use GuzzleHttp\Client;
+use GuzzleHttp\Exception\GuzzleException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Client\Request;
@@ -28,29 +33,8 @@ Route::get('/', function () {
 //Route::get('/login', [AuthController::class, 'authenticate']);
 
 Route::get('/login', [AuthController::class, 'login'])->name('login');
-Route::get('/test', function () {
-//    $response = Http::withHeaders([
-//        'Content-Type' => 'multipart/form-data'
-//    ])->attach('imageData', file_get_contents("/home/nsyuremov/Study/Diplom/ShopBot/valid/backpack puma_phase_backpack (2).png"), 'image.jpg')
-//        ->post('http://shop.local/rest/all/V1/chatbot/validImage/');
-//    if ($response->successful()) {
-//        echo 'test';
-//    } else {
-//        echo $response->getBody();
-//    }
-    $client = new Client();
+Route::get('/getAnalyticMenus', [\App\Http\Controllers\AnalyticController::class, 'getMenus']);
 
-    $response = $client->request('POST', 'http://shop.local/rest/all/V1/chatbot/validImage', [
-        'multipart' => [
-            [
-                'name' => 'image',
-                'contents' => fopen('/home/nsyuremov/Study/Diplom/ShopBot/valid/backpack puma_phase_backpack (2).png', 'r'),
-                'filename' => 'image.png'
-            ]
-        ]
-    ]);
-
-    echo $response->getBody();
+Route::get('/test', function (MageConfig $mageConfig){
+    print_r($mageConfig->getSupportUsername());
 });
-
-

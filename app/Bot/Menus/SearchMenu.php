@@ -2,10 +2,14 @@
 
 namespace App\Bot\Menus;
 
+use App\Bot\CallbackHandler\ProductMenu\KeywordProductMenuHandler;
+use App\Bot\CallbackHandler\ProductMenu\NeuroProductMenuHandler;
 use App\Magento\Repository\MageRepository;
+use App\Models\Subscriber;
 use App\Models\User;
 use App\Neuro\ValidImage;
 use GuzzleHttp\Exception\GuzzleException;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\NotFoundExceptionInterface;
@@ -31,9 +35,7 @@ class SearchMenu extends AbstractMenu
         $this->clearButtons();
 
         try {
-            Log::debug("Before:".json_encode($bot->getGlobalData($bot->chatId()) ?? ''));
             $bot->deleteGlobalData($bot->chatId());
-            Log::debug("After:".json_encode($bot->getGlobalData($bot->chatId()) ?? ''));
         } catch (InvalidArgumentException $e) {
         }
 
@@ -64,7 +66,7 @@ class SearchMenu extends AbstractMenu
             foreach ($categories as $category) {
                 $this->addButtonRow(
                     InlineKeyboardButton::make($category->name, callback_data: $category->id . "," . $category->name . '@handleCategory'),
-                    InlineKeyboardButton::make("\xE2\x9E\xA1", callback_data: 'show_products ' . $category->id)
+                    InlineKeyboardButton::make("\xE2\x9E\xA1", callback_data: 'show_category_products category-' . $category->id . ',start_search_menu')
                 );
             }
             $this->addButtonRow(InlineKeyboardButton::make("\xF0\x9F\x94\x99", callback_data: '@start'));
@@ -76,7 +78,9 @@ class SearchMenu extends AbstractMenu
 
     public function handleCategory(Nutgram $bot)
     {
+        $this->clearButtons();
         $data = $bot->callbackQuery()->data;
+        Log::debug("82:" . $data);
         list($id, $name) = explode(',', $data);
 
         try {
@@ -93,13 +97,29 @@ class SearchMenu extends AbstractMenu
             }
 
             $this->clearButtons();
+
+            $user = User::where(User::TELEGRAM_ID, $bot->chatId())->first();
+            $subscribes = Subscriber::where('category_id', $id)->where('user_id', $bot->chatId())->first();
+
+            if (!$subscribes) {
+                Log::info("Подписаться");
+                $this->addButtonRow(
+                    InlineKeyboardButton::make("Подписаться на обновления этой категории", callback_data: "$id,$name,{$bot->chatId()}@subscribe")
+                );
+            } else {
+                Log::info("Отписаться");
+                $this->addButtonRow(
+                    InlineKeyboardButton::make("Отписаться от обновлений этой категории", callback_data: "$id,$name,{$bot->chatId()}@unsubscribe")
+                );
+            }
+
             $this->addButtonRow(
-                InlineKeyboardButton::make("Показать товары в этой категории.", callback_data: 'show_products ' . $id)
+                InlineKeyboardButton::make("Показать товары в этой категории.", callback_data: 'show_category_products category-' . $id . ',categories')
             );
             foreach ($categories as $category) {
                 $this->addButtonRow(
                     InlineKeyboardButton::make($category->name, callback_data: $category->id . "," . $category->name . '@handleCategory'),
-                    InlineKeyboardButton::make("\xE2\x9E\xA1", callback_data: 'show_products ' . $category->id)
+                    InlineKeyboardButton::make("\xE2\x9E\xA1", callback_data: 'show_category_products category-' . $category->id . ',categories')
                 );
             }
             $this->addButtonRow(InlineKeyboardButton::make("\xF0\x9F\x94\x99", callback_data: 'categories'));
@@ -107,6 +127,22 @@ class SearchMenu extends AbstractMenu
         } catch (GuzzleException $e) {
             Log::error($e);
         }
+    }
+
+    public function subscribe(Nutgram $bot)
+    {
+        $data = explode(',', $bot->callbackQuery()->data);
+        Subscriber::firstOrCreate(['user_id' => $data[2], 'category_id' => $data[0]]);
+        $this->bot = $bot;
+        $this->handleCategory($bot);
+    }
+
+    public function unsubscribe(Nutgram $bot)
+    {
+        $data = explode(',', $bot->callbackQuery()->data);
+        Subscriber::where('user_id', $data[2])->where('category_id', $data[0])->first()?->delete();
+        $this->bot = $bot;
+        $this->handleCategory($bot);
     }
 
     public function handleKeywords(Nutgram $bot)
@@ -119,9 +155,7 @@ class SearchMenu extends AbstractMenu
     public function continueKeyword(Nutgram $bot)
     {
         $answer = $bot->message()->text;
-
-        $bot->setData('keyword', $answer);
-        ProductMenu::begin($bot);
+        KeywordProductMenuHandler::execute($bot, 'keyword', $answer, 'start_search_menu');
     }
 
     public function handlePhoto(Nutgram $bot)
@@ -153,11 +187,10 @@ class SearchMenu extends AbstractMenu
             $path = 'valid/' . $fileId . '.jpg';
             $bot->downloadFile($file, $path);
             $result = $this->imageValidator->validate($fileId);
+            File::delete(public_path($path));
             $this->closeMenu();
             $keys = array_keys($result);
-            Log::debug(reset($keys));
-            $bot->setData('neuro_label', $keys);
-            ProductMenu::begin($bot);
+            NeuroProductMenuHandler::execute($bot, 'neuro_label', $keys, 'start_search_menu');
             return;
         } catch (\Exception $exception) {
             Log::error($exception);

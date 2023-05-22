@@ -9,7 +9,7 @@ use SergiX44\Nutgram\Nutgram;
 use SergiX44\Nutgram\Telegram\Attributes\ParseMode;
 use SergiX44\Nutgram\Telegram\Types\Keyboard\InlineKeyboardButton;
 
-class OrdersMenu extends InlineMenu
+class OrdersMenu extends AbstractMenu
 {
     public function __construct(protected MageRepository $mageRepository)
     {
@@ -36,7 +36,20 @@ class OrdersMenu extends InlineMenu
         $orders = $this->mageRepository->getOrders($chatId);
         $textArr = [];
         foreach ($orders as $order) {
+            $products = '';
+            foreach ($order->items as $item) {
+                try {
+                    $ignore = $item->parent_item;
+                } catch (\ErrorException $exception) {
+                    $products = $products . $item->name . ' '
+                        . $item->qty_invoiced . 'шт. '
+                        . $item->row_total . ' ' . $order->order_currency_code . "\n";
+                }
+            }
             $textArr[] = "Заказ № ".$order->increment_id." - Статус <b>".$order->status . "</b>\n"
+                . "Товары: \n"
+                . $products
+                . "Сумма заказа: " . $order->base_grand_total . " " . $order->order_currency_code . "\n"
                 . "Подробнее: " . config('global.magento_url') . '/sales/order/view/order_id/' . $order->entity_id . "\n"
             . "═══════════════════════════\n";
         }
@@ -49,7 +62,8 @@ class OrdersMenu extends InlineMenu
             ->showMenu();
     }
 
-    public function changeNotify(Nutgram $bot) {
+    public function changeNotify(Nutgram $bot)
+    {
         $chatId = $bot->callbackQuery()->data;
         $user = User::where(User::TELEGRAM_ID, $chatId)->first();
         $user->notify = $user->notify == 0 ? 1 : 0;

@@ -75,6 +75,24 @@ class MageConfig
         ]]);
     }
 
+    public function sendInviteLink(string $link)
+    {
+        $endpoint = config('global.magento_url') . "/rest/all/V1/chatbot/addInviteLink?link=$link";
+        $client = new Client();
+        $client->request('get', $endpoint);
+    }
+
+    /**
+     * @throws GuzzleException
+     */
+    public function getSupportUsername(): string
+    {
+        $endpoint = config('global.magento_url') . "/rest/all/V1/chatbot/getSupportUsername/";
+        $client = new Client();
+        $body = json_decode($client->request('get', $endpoint)->getBody()->getContents());
+        return $body;
+    }
+
     private function update_env($data = []) : void
     {
         $path = base_path('.env');
